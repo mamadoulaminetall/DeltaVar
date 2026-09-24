@@ -1,5 +1,5 @@
 """
-GenGI — DNA Embedder
+DeltaVar — DNA Embedder
 Wraps Nucleotide Transformer v2 (InstaDeepAI) for variant embedding.
 Also provides MockEmbedder for demo / CI mode.
 """

@@ -1,6 +1,6 @@
 """
-GenGI — Streamlit Demo
-General Genome Interpretation: variant pathogenicity scoring powered by
+DeltaVar — Streamlit Demo
+Variant Effect Scoring: variant pathogenicity scoring powered by
 Nucleotide Transformer + PyTorch TransformerEncoder.
 """
 
@@ -18,13 +18,13 @@ import plotly.express as px
 import streamlit as st
 import torch
 
-from model import GenGI
+from model import DeltaVar
 
 # ---------------------------------------------------------------------------
 # Page config
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="GenGI — General Genome Interpretation",
+    page_title="DeltaVar — Variant Effect Scoring",
     page_icon="🧬",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -55,7 +55,7 @@ st.markdown("""
 html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
 
 /* ── Navbar ── */
-.gengi-navbar {
+.deltavar-navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -141,7 +141,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
 }
 
 /* ── Footer ── */
-.gengi-footer {
+.deltavar-footer {
     margin-top: 3rem;
     padding: 1.2rem 0 0.8rem 0;
     border-top: 1px solid #e2e8f0;
@@ -149,7 +149,7 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
     font-size: 0.76rem;
     color: #94a3b8;
 }
-.gengi-footer a { color: #60a5fa; text-decoration: none; }
+.deltavar-footer a { color: #60a5fa; text-decoration: none; }
 
 /* Hide default footer */
 footer { visibility: hidden; }
@@ -180,7 +180,7 @@ MEDFLOW_LOGO_SVG = """
   <text x="171" y="29" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700"
         fill="white" text-anchor="middle" letter-spacing="0.5">AI</text>
   <text x="56" y="52" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="400"
-        fill="#94a3b8" letter-spacing="0.3">GenGI · Genome Interpretation</text>
+        fill="#94a3b8" letter-spacing="0.3">DeltaVar · Genome Interpretation</text>
 </svg>
 """
 
@@ -189,9 +189,9 @@ MEDFLOW_LOGO_SVG = """
 # ---------------------------------------------------------------------------
 
 @st.cache_resource
-def load_model(hidden_dim: int = 256) -> GenGI:
-    model = GenGI(input_dim=512, hidden_dim=hidden_dim)
-    ckpt_path = Path("models/gengi_best.pt")
+def load_model(hidden_dim: int = 256) -> DeltaVar:
+    model = DeltaVar(input_dim=512, hidden_dim=hidden_dim)
+    ckpt_path = Path("models/deltavar_best.pt")
     if ckpt_path.exists():
         ckpt = torch.load(ckpt_path, map_location="cpu")
         model.load_state_dict(ckpt["model_state_dict"])
@@ -268,7 +268,7 @@ def parse_vcf(uploaded_file) -> List[dict]:
 # Scoring pipeline
 # ---------------------------------------------------------------------------
 
-def score_variants(variants: List[dict], model: GenGI, embedder, demo_mode: bool) -> pd.DataFrame:
+def score_variants(variants: List[dict], model: DeltaVar, embedder, demo_mode: bool) -> pd.DataFrame:
     if not variants:
         return pd.DataFrame()
 
@@ -398,7 +398,7 @@ def make_xai_chart(results: pd.DataFrame) -> go.Figure:
 
 ARCH_DIAGRAM = """\
 ┌──────────────────────────────────────────────────────────────────┐
-│                    GenGI Architecture                            │
+│                    DeltaVar Architecture                            │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  Input: WES variants   chrN:pos:REF>ALT                         │
@@ -422,7 +422,7 @@ ARCH_DIAGRAM = """\
 │                     │                                            │
 │                     ▼                                            │
 │  ┌───────────────────────────────────┐                          │
-│  │  GenGI TransformerEncoder         │                          │
+│  │  DeltaVar TransformerEncoder         │                          │
 │  │  Linear(512 → 256)                │                          │
 │  │  [CLS_token] ++ variant_tokens    │                          │
 │  │  Pre-LN TransformerEncoder 2L 4H  │  d_ff = 1024            │
@@ -469,9 +469,9 @@ def render_sidebar() -> tuple[str, str]:
 
         st.divider()
         st.markdown("""
-**About GenGI**
+**About DeltaVar**
 
-GenGI combines [Nucleotide Transformer](https://github.com/instadeepai/nucleotide-transformer)
+DeltaVar combines [Nucleotide Transformer](https://github.com/instadeepai/nucleotide-transformer)
 (InstaDeepAI / EMBL-EBI) with a custom PyTorch TransformerEncoder to score
 variant pathogenicity from raw DNA context.
 
@@ -481,7 +481,7 @@ induced by the substitution in NT embedding space.
 
 ---
 🔗 [AI4GI · IGMM CNRS Montpellier](https://www.igmm.cnrs.fr)
-🔗 [GitHub · GenGI](https://github.com/mamadoulaminetall/GenGI)
+🔗 [GitHub · DeltaVar](https://github.com/mamadoulaminetall/DeltaVar)
         """)
         st.markdown("""<a href="https://buy.stripe.com/00w9AT8Vy0SxcF81QGb3q07" target="_blank" style="display:block;background:linear-gradient(135deg,#10b981,#059669);color:white;text-align:center;padding:11px 16px;border-radius:9px;font-weight:700;text-decoration:none;font-size:0.87rem;margin-top:10px">💳 S'abonner — 99€/mois</a>""", unsafe_allow_html=True)
 
@@ -492,7 +492,7 @@ induced by the substitution in NT embedding space.
 # Tab 1 — Variant Analysis
 # ---------------------------------------------------------------------------
 
-def tab_variant_analysis(demo_mode: bool, model: GenGI, embedder):
+def tab_variant_analysis(demo_mode: bool, model: DeltaVar, embedder):
     st.markdown("<div class='section-title'>Variant Input</div>", unsafe_allow_html=True)
 
     input_mode = st.radio(
@@ -534,7 +534,7 @@ def tab_variant_analysis(demo_mode: bool, model: GenGI, embedder):
     st.divider()
 
     if st.button("🔍 Analyze Variants", type="primary", disabled=len(variants) == 0):
-        with st.spinner("Running GenGI pipeline …"):
+        with st.spinner("Running DeltaVar pipeline …"):
             try:
                 results = score_variants(variants, model, embedder, demo_mode)
             except Exception as e:
@@ -582,7 +582,7 @@ def tab_variant_analysis(demo_mode: bool, model: GenGI, embedder):
         )
 
         csv = results.to_csv(index=False).encode()
-        st.download_button("⬇️ Download CSV", data=csv, file_name="gengi_results.csv", mime="text/csv")
+        st.download_button("⬇️ Download CSV", data=csv, file_name="deltavar_results.csv", mime="text/csv")
         st.session_state["results"] = results
 
 
@@ -638,7 +638,7 @@ def tab_patient_view():
 # ---------------------------------------------------------------------------
 
 def tab_architecture(demo_mode: bool):
-    st.markdown("<div class='section-title'>GenGI Model Architecture</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>DeltaVar Model Architecture</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 2])
     with col1:
@@ -653,7 +653,7 @@ def tab_architecture(demo_mode: bool):
 | NT backbone | NT-v2-50M (InstaDeepAI) |
 | NT embedding dim | 512 |
 | Δ = embed(alt)−embed(ref) | 512-dim |
-| GenGI hidden dim | 256 |
+| DeltaVar hidden dim | 256 |
 | Transformer layers | 2 |
 | Attention heads | 4 |
 | Feed-forward dim | 1 024 |
@@ -670,7 +670,7 @@ def tab_architecture(demo_mode: bool):
 - UK Biobank WES · [Nature 2022](https://doi.org/10.1038/s41586-022-04965-x)
         """)
 
-        ckpt = Path("models/gengi_best.pt")
+        ckpt = Path("models/deltavar_best.pt")
         if ckpt.exists():
             c = torch.load(ckpt, map_location="cpu")
             st.success(f"Checkpoint: epoch {c.get('epoch','?')} — val AUROC {c.get('val_auroc',0):.4f}")
@@ -688,7 +688,7 @@ def main():
 
     # Navbar
     st.markdown(f"""
-<div class="gengi-navbar">
+<div class="deltavar-navbar">
   <div class="navbar-left">
     <svg width="38" height="38" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -703,8 +703,8 @@ def main():
                 fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div>
-      <div class="navbar-title">GenGI</div>
-      <div class="navbar-sub">General Genome Interpretation · MedFlow AI</div>
+      <div class="navbar-title">DeltaVar</div>
+      <div class="navbar-sub">Variant Effect Scoring · MedFlow AI</div>
     </div>
   </div>
   <div>
@@ -722,7 +722,7 @@ def main():
             msg = "⚡ Full model unavailable in this environment — automatically switched to Demo mode (MockEmbedder). Deploy locally with <code>pip install transformers accelerate</code> for real predictions."
         st.markdown(f"<div class='demo-banner'>⚠️ {msg}</div>", unsafe_allow_html=True)
 
-    with st.spinner("Loading GenGI model …"):
+    with st.spinner("Loading DeltaVar model …"):
         model = load_model()
 
     tab1, tab2, tab3 = st.tabs(["🔬 Variant Analysis", "🧑‍⚕️ Patient View", "📐 Architecture"])
@@ -735,7 +735,7 @@ def main():
         tab_architecture(demo_mode or fell_back)
 
     st.markdown("""
-<div class="gengi-footer">
+<div class="deltavar-footer">
   Built by <strong>Dr. Mamadou Lamine TALL</strong> ·
   <a href="https://github.com/mamadoulaminetall">MedFlow AI</a> ·
   Powered by Nucleotide Transformer + PyTorch ·

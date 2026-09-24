@@ -1,5 +1,5 @@
 """
-GenGI — General Genome Interpretation
+DeltaVar — Variant Effect Scoring
 PyTorch model: TransformerEncoder over variant delta-embeddings.
 """
 
@@ -14,9 +14,9 @@ import numpy as np
 from typing import Optional
 
 
-class GenGI(nn.Module):
+class DeltaVar(nn.Module):
     """
-    General Genome Interpretation model.
+    Variant Effect Scoring model.
 
     Input : delta embeddings  [B, N_variants, D]  (alt_embed - ref_embed)
     Output: pathogenicity logits  [B, 1]
@@ -177,7 +177,7 @@ class VariantDataset(Dataset):
             delta = embedder.embed_variant_delta(ref_batch, alt_batch)  # [k, D]
             deltas.append(delta.cpu())
 
-        # Each sample is a single variant; wrap as [1, D] for GenGI's [B, N, D] contract
+        # Each sample is a single variant; wrap as [1, D] for DeltaVar's [B, N, D] contract
         self.deltas = torch.cat(deltas, dim=0)  # [total, D]
 
     def __len__(self) -> int:

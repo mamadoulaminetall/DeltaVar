@@ -1,5 +1,5 @@
 """
-GenGI — Training Script
+DeltaVar — Training Script
 ClinVar SNV pathogenicity classification using delta embeddings + TransformerEncoder.
 
 Usage
@@ -25,7 +25,7 @@ from sklearn.metrics import roc_auc_score, classification_report
 
 from data_loader import download_clinvar, load_clinvar_snvs, prepare_dataset
 from embedder import DNAEmbedder, MockEmbedder
-from model import GenGI
+from model import DeltaVar
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +53,7 @@ def build_tensor_dataset(deltas: torch.Tensor, labels: torch.Tensor) -> TensorDa
     return TensorDataset(deltas.unsqueeze(1), labels.float())  # [N, 1, D], [N]
 
 
-def evaluate(model: GenGI, loader: DataLoader, device: torch.device):
+def evaluate(model: DeltaVar, loader: DataLoader, device: torch.device):
     model.eval()
     all_logits, all_labels = [], []
     with torch.no_grad():
@@ -96,7 +96,7 @@ def build_mock_dataset(n: int = 1000, embed_dim: int = 512):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train GenGI variant classifier")
+    parser = argparse.ArgumentParser(description="Train DeltaVar variant classifier")
     parser.add_argument("--data-dir", default="data/", help="Directory for ClinVar cache")
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -161,12 +161,12 @@ def main():
     # ------------------------------------------------------------------
     # 3. Model, optimiser, scheduler
     # ------------------------------------------------------------------
-    model = GenGI(
+    model = DeltaVar(
         input_dim=embed_dim,
         hidden_dim=args.hidden_dim,
     ).to(device)
 
-    print(f"GenGI parameters: {model.count_parameters():,}")
+    print(f"DeltaVar parameters: {model.count_parameters():,}")
 
     criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-2)
@@ -215,16 +215,16 @@ def main():
                     "val_auroc": val_auroc,
                     "args": vars(args),
                 },
-                "models/gengi_best.pt",
+                "models/deltavar_best.pt",
             )
 
     print(f"\nBest model: epoch {best_epoch}, val AUROC={best_val_auroc:.4f}")
-    print("Saved to models/gengi_best.pt")
+    print("Saved to models/deltavar_best.pt")
 
     # ------------------------------------------------------------------
     # 5. Final test evaluation
     # ------------------------------------------------------------------
-    checkpoint = torch.load("models/gengi_best.pt", map_location=device)
+    checkpoint = torch.load("models/deltavar_best.pt", map_location=device)
     model.load_state_dict(checkpoint["model_state_dict"])
 
     test_loss, test_auroc, probs, labels_np = evaluate(model, test_loader, device)

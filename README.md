@@ -1,4 +1,4 @@
-# 🧬 GenGI — General Genome Interpretation
+# 🧬 DeltaVar — Variant Effect Scoring
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1+-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org)
@@ -8,7 +8,7 @@
 
 ## Abstract
 
-**GenGI** is a research proof-of-concept that couples the **Nucleotide Transformer v2** (InstaDeepAI/EMBL-EBI, 50M parameters) with a custom **PyTorch TransformerEncoder** to predict variant pathogenicity from raw whole-exome sequencing (WES) variant calls. Unlike annotation-based tools (CADD, REVEL), GenGI operates directly on DNA sequence: for each variant `chr:pos:ref:alt`, it fetches ±128 bp of genomic context via the Ensembl REST API, computes two CLS embeddings (reference and alternate), and feeds the *mutation-effect vector* Δ = embed(alt) − embed(ref) into a pre-LayerNorm TransformerEncoder. A learnable CLS token aggregates information across all variants of a patient, enabling joint, context-aware pathogenicity scoring. Gradient × input attribution provides single-variant explainability. The model is trained on balanced ClinVar SNVs (Pathogenic / Benign, GRCh38) and evaluated by AUROC.
+**DeltaVar** is a research proof-of-concept that couples the **Nucleotide Transformer v2** (InstaDeepAI/EMBL-EBI, 50M parameters) with a custom **PyTorch TransformerEncoder** to predict variant pathogenicity from raw whole-exome sequencing (WES) variant calls. Unlike annotation-based tools (CADD, REVEL), DeltaVar operates directly on DNA sequence: for each variant `chr:pos:ref:alt`, it fetches ±128 bp of genomic context via the Ensembl REST API, computes two CLS embeddings (reference and alternate), and feeds the *mutation-effect vector* Δ = embed(alt) − embed(ref) into a pre-LayerNorm TransformerEncoder. A learnable CLS token aggregates information across all variants of a patient, enabling joint, context-aware pathogenicity scoring. Gradient × input attribution provides single-variant explainability. The model is trained on balanced ClinVar SNVs (Pathogenic / Benign, GRCh38) and evaluated by AUROC.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ Ensembl REST API  →  ±128 bp DNA context
                  │
                  ▼
 ┌──────────────────────────────────┐
-│  GenGI TransformerEncoder        │
+│  DeltaVar TransformerEncoder        │
 │  Linear(512 → 256)               │
 │  [CLS] prepended                 │
 │  TransformerEncoder (2L, 4H)     │
@@ -57,8 +57,8 @@ XAI:  gradient × Δ  →  per-variant importance score
 - (Optional) GPU for the full Nucleotide Transformer backbone
 
 ```bash
-git clone https://github.com/mamadoulaminetall/GenGI.git
-cd GenGI
+git clone https://github.com/mamadoulaminetall/DeltaVar.git
+cd DeltaVar
 pip install -r requirements.txt
 ```
 
@@ -93,7 +93,7 @@ python train.py --epochs 30 --n-variants 5000 --batch-size 32
 python train.py --device cuda --epochs 30 --n-variants 10000 --batch-size 64
 ```
 
-Training logs: `train_loss`, `val_loss`, `val_AUROC` per epoch. Best checkpoint saved to `models/gengi_best.pt`.
+Training logs: `train_loss`, `val_loss`, `val_AUROC` per epoch. Best checkpoint saved to `models/deltavar_best.pt`.
 
 ### Expected performance (ClinVar pathogenic vs benign SNVs)
 
@@ -124,13 +124,13 @@ The long-term target application is the UK Biobank whole-exome sequencing cohort
 > Backman J.D. et al. *Exome sequencing and analysis of 454,787 UK Biobank participants.* Nature (2021). https://doi.org/10.1038/s41586-021-04103-z
 
 **GenomicBERT / GENA-LM**  
-Concurrent work confirms that transformer-based DNA encoders transfer effectively to clinical variant interpretation tasks, supporting the GenGI design.
+Concurrent work confirms that transformer-based DNA encoders transfer effectively to clinical variant interpretation tasks, supporting the DeltaVar design.
 
 ## Roadmap
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| **Phase 1** | ✅ POC | ClinVar SNV binary classification (Pathogenic/Benign) using NT delta embeddings + GenGI |
+| **Phase 1** | ✅ POC | ClinVar SNV binary classification (Pathogenic/Benign) using NT delta embeddings + DeltaVar |
 | **Phase 2** | Planned | UK Biobank WES — multi-patient cohort, phenotype association, larger variant sets per patient |
 | **Phase 3** | Planned | Multi-phenotype structured output, cross-modal integration (gene expression, protein structure) |
 | **Phase 4** | Planned | Clinical integration API, ACMG criteria alignment, ensemble with CADD/AlphaMissense |
@@ -138,9 +138,9 @@ Concurrent work confirms that transformer-based DNA encoders transfer effectivel
 ## Project Structure
 
 ```
-GenGI/
+DeltaVar/
 ├── app.py              # Streamlit demo application
-├── model.py            # GenGI PyTorch model + VariantDataset
+├── model.py            # DeltaVar PyTorch model + VariantDataset
 ├── embedder.py         # DNAEmbedder (Nucleotide Transformer) + MockEmbedder
 ├── data_loader.py      # ClinVar download, Ensembl sequence fetching, dataset prep
 ├── train.py            # Training script with AdamW + cosine LR
@@ -152,7 +152,7 @@ GenGI/
 
 ## Why Δ = embed(alt) − embed(ref)?
 
-Standard tools (CADD, REVEL) rely on hand-crafted annotations. GenGI instead uses a **pre-trained DNA LLM as a universal sequence encoder** and computes the mutation-effect vector Δ: a 512-dimensional representation of *what changes* when a substitution occurs in the DNA context. This is:
+Standard tools (CADD, REVEL) rely on hand-crafted annotations. DeltaVar instead uses a **pre-trained DNA LLM as a universal sequence encoder** and computes the mutation-effect vector Δ: a 512-dimensional representation of *what changes* when a substitution occurs in the DNA context. This is:
 
 - **Context-aware** — the NT has been pre-trained on 2,500+ genomes and encodes splicing signals, regulatory grammar, and evolutionary conservation
 - **Annotation-free** — no external databases required at inference time
@@ -183,11 +183,11 @@ Standard tools (CADD, REVEL) rely on hand-crafted annotations. GenGI instead use
 ## Citation
 
 ```bibtex
-@software{tall2026gengi,
+@software{tall2026deltavar,
   author = {Tall, Mamadou Lamine},
-  title  = {{GenGI}: General Genome Interpretation via DNA-LLM + TransformerEncoder},
+  title  = {{DeltaVar}: Variant Effect Scoring via DNA-LLM + TransformerEncoder},
   year   = {2026},
-  url    = {https://github.com/mamadoulaminetall/GenGI},
+  url    = {https://github.com/mamadoulaminetall/DeltaVar},
 }
 ```
 

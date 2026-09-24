@@ -1,5 +1,5 @@
 """
-GenGI — Data Loader
+DeltaVar — Data Loader
 ClinVar SNV download, parsing, Ensembl sequence fetching, dataset preparation.
 """
 
